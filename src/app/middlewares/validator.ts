@@ -11,11 +11,11 @@ const registerCustomRules = () => {
 		// eslint-disable-next-line no-unused-vars
 		async (value, requirement, attribute, passes) => {
 			if (!requirement) {
-				return passes(false, 'exists requirements are expected');
+				return passes(false, 'Exists requirements are expected.');
 			}
 			const requirements = requirement.split(',');
 			if (requirements.length !== 2) {
-				return passes(false, 'exists requirements must be exactly 2');
+				return passes(false, 'Exists requirements must be exactly 2.');
 			}
 			const modelName = requirements[0];
 			const modelField = requirements[1];
@@ -23,22 +23,22 @@ const registerCustomRules = () => {
 			const Model = mongoose.connection.model(formattedModelName);
 			const foundModel = await Model.findOne({ [modelField]: value });
 			if (!foundModel) {
-				return passes(false, `the ${attribute} does not exist`);
+				return passes(false, `The ${attribute} does not exist.`);
 			}
 			return passes();
 		},
-		'the :attribute does not exist'
+		'The :attribute does not exist.'
 	);
 	Validator.registerAsync(
 		'unique',
 		// eslint-disable-next-line no-unused-vars
 		async (value, requirement, attribute, passes) => {
 			if (!requirement) {
-				return passes(false, 'unique requirements are expected');
+				return passes(false, 'Unique requirements are expected.');
 			}
 			const requirements = requirement.split(',');
 			if (requirements.length !== 2) {
-				return passes(false, 'unique requirements must be exactly 2');
+				return passes(false, 'Unique requirements must be exactly 2.');
 			}
 			const modelName = requirements[0];
 			const modelField = requirements[1];
@@ -46,22 +46,38 @@ const registerCustomRules = () => {
 			const Model = mongoose.connection.model(formattedModelName);
 			const foundModel = await Model.findOne({ [modelField]: value });
 			if (foundModel) {
-				return passes(false, `The ${attribute} already exists`);
+				return passes(false, `The ${attribute} already exists.`);
 			}
 			return passes();
 		},
-		'the :attribute already exists'
+		'The :attribute already exists.'
 	);
-	Validator.register(
+	Validator.registerAsync(
 		'file',
 		// eslint-disable-next-line no-unused-vars
-		(value, requirement, attribute) => {
+		(value, requirement, attribute, passes) => {
 			if (!(value as any).isFile) {
-				return false;
+				return passes(false, `The ${attribute} is not a file.`);
 			}
-			return true;
+			if ((value as any).size > (process.env.MAX_FILE_UPLOAD as unknown as number)) {
+				return passes(false, `The ${attribute} file size exceeds ${process.env.MAX_FILE_UPLOAD}.`);
+			}
+			return passes();
 		},
-		'the :attribute is not a file'
+		'The :attribute is not a file.'
+	);
+	Validator.registerAsync(
+		'mime',
+		(value, requirement, attribute, passes) => {
+			if (!requirement) {
+				return passes(false, 'Mime type requirements are expected.');
+			}
+			if (!(value as any).mimetype || !(value as any).mimetype.startsWith(requirement)) {
+				return passes(false, `The ${attribute} is not a(n) ${requirement}.`);
+			}
+			return passes();
+		},
+		'The :attribute does not have a valid mimetype.'
 	);
 };
 
@@ -135,10 +151,12 @@ const convertValidationErrorsToString = (err: Errors) => {
 
 	// eslint-disable-next-line no-unused-vars
 	Object.entries(err.errors).forEach(([key, value]) => {
-		errors = errors.concat(value + ', ');
+		value.forEach((error) => {
+			errors = errors.concat(error + ' ');
+		});
 	});
 	errors.forEach((errorValue) => {
-		let errorValueWithoutPeriod = errorValue.split('., ')[0];
+		let errorValueWithoutPeriod = errorValue.split('. ')[0];
 		if (errors.indexOf(errorValue) != errors.length - 1) {
 			errorValueWithoutPeriod += ', ';
 		}
