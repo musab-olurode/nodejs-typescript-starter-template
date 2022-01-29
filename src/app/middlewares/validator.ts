@@ -67,8 +67,8 @@ const registerCustomRules = () => {
 
 registerCustomRules();
 
-const validator = async (body: any, rules: Rules, callback: Function, customMessages?: ErrorMessages) => {
-	const validation = new Validator(body, rules, customMessages);
+const validator = async (data: any, rules: Rules, callback: Function, customMessages?: ErrorMessages) => {
+	const validation = new Validator(data, rules, customMessages);
 	validation.passes(() => callback(null, true));
 	validation.fails(() => callback(validation.errors, false));
 	validation.checkAsync(
