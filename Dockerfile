@@ -1,4 +1,4 @@
-FROM node
+FROM node:16.14.0
 
 # Create app directory
 WORKDIR /usr/app
@@ -18,8 +18,9 @@ COPY . .
 # for typescript
 RUN npm run build
 COPY .env ./dist/
-WORKDIR /dist/
+WORKDIR ./dist
 
 EXPOSE 5000
+EXPOSE 27017
 
 CMD ["npm", "start"]

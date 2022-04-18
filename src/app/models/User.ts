@@ -11,6 +11,7 @@ const UserSchema = new Schema<UserDoc>(
 			type: String,
 			unique: true,
 			// required: [true, 'Please add a phone number'],
+			partialFilterExpression: { phone: { $type: 'string' } },
 		},
 		email: {
 			type: String,
